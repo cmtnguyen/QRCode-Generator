@@ -12,18 +12,19 @@ def Find(string):
     regex = r"(?i)\b((?:https?://|www\d{0,3}[.]|[a-z0-9.\-]+[.][a-z]{2,4}/)(?:[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]+|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:'\".,<>?«»“”‘’]))"
     return re.match(regex, string)
 
-# QR Code Colors
+# QR Code Lists
 colors = ["Black","Blue","Red", "Green"]
+keys_to_clear = ["LINK", "FILENAME","COLOR"]
 
 # opens up another terminal window with text and a button
 layout = [[sg.Text("Input a QR Code Link and Image Name")], 
-          [sg.Text("QR CODE LINK"), sg.InputText(do_not_clear=False)],
-          [sg.Text("QR IMAGE NAME"), sg.InputText(do_not_clear=False)],
-          [sg.Text("Select a QR Code color"), sg.Combo(colors, default_value=colors[0], enable_events=True, readonly=True, key='COLOR')],
+          [sg.Text("QR CODE LINK"), sg.InputText(key='LINK')],
+          [sg.Text("QR IMAGE NAME"), sg.InputText(key='FILENAME')],
+          [sg.Text("Select a QR Code color"), sg.Combo(colors, default_value=colors[0], enable_events=True, readonly=True, key="COLOR")],
           [sg.Button("CREATE"), sg.Button("CLOSE")]]
 
 # Create the window
-window = sg.Window("Windows QR Code Generator", layout)
+window = sg.Window("QR Code Generator", layout)
 
 # Create an event loop
 while True:
@@ -34,12 +35,12 @@ while True:
     if event == "CLOSE" or event == sg.WIN_CLOSED:
         break
 
-    if (event == "CREATE" and values[0] and values[1]): 
-        if Find(values[0]):
+    if (event == "CREATE" and values["LINK"] and values["FILENAME"]): 
+        if Find(values["LINK"]):
             qr = qrcode.QRCode(version = 1, box_size = 10, border = 5)
 
             # holds QR code URL
-            qr.add_data(values[0])
+            qr.add_data(values["LINK"])
 
             qr.make(fit=True)
 
@@ -49,12 +50,16 @@ while True:
 
             # location and file qrcode will save as
             # forward slashes for directory links
-            path = os.path.join(os.path.expanduser('~'), 'Desktop', values[1] + '.png')
+            path = os.path.join(os.path.expanduser('~'), 'Desktop', values["FILENAME"] + '.png')
             img.save(path)
 
-            values[0] = ''
-            values[1] = ''
+            # clears and resets values
+            for key in keys_to_clear:
+                if key == "COLOR":
+                    window[key](colors[0])
+                else:
+                    window[key]('')
         else:
-            pyautogui.alert("Please submit a valid URL for the QR Code :)",title="Oh No!")
+            pyautogui.alert("Please submit a valid URL for the QR Code following this format: 'https://websitehere.extension'",title="Oh No!")
 
 window.close()
